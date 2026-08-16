@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>個別作業日報</title>
+<style>
+:root{
+  --bg:#f1f5f9;--card:#fff;--ink:#0f172a;--sub:#64748b;--line:#cbd5e1;
+  --blue:#2563eb;--green:#16a34a;--red:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
+header{position:sticky;top:0;z-index:20;background:#0f172a;color:#fff;padding:14px 16px calc(12px + env(safe-area-inset-top));box-shadow:0 3px 12px rgba(0,0,0,.18)}
+header h1{margin:0;font-size:19px}
+header p{margin:4px 0 0;font-size:11px;color:#cbd5e1}
+main{max-width:760px;margin:auto;padding:12px 12px 110px}
+.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px rgba(15,23,42,.06)}
+.card h2{font-size:15px;margin:0 0 12px}
+label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#334155}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:11px;background:#fff;padding:11px 12px;font-size:16px;color:var(--ink)}
+textarea{min-height:88px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:9px 13px;font-size:13px;font-weight:800;cursor:pointer}
+.chip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.quick{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.quick button{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:10px;padding:10px;font-weight:800}
+.btn{border:0;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:900;cursor:pointer}
+.btn-primary{background:var(--blue);color:#fff}.btn-dark{background:#0f172a;color:#fff}.btn-light{background:#e2e8f0;color:#0f172a}.btn-danger{background:#fee2e2;color:#991b1b}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.summary{white-space:pre-wrap;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:12px;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+.saved{border:1px solid #e2e8f0;border-radius:13px;padding:12px;margin-top:9px}
+.saved .title{font-weight:900;font-size:14px}.saved .meta{color:var(--sub);font-size:12px;margin-top:4px}.saved .tags{font-size:11px;margin-top:6px}
+.saved .buttons{display:flex;gap:7px;margin-top:9px}.saved .buttons button{padding:8px 10px;font-size:12px}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:11px}
+.muted{font-size:12px;color:var(--sub)}
+.sticky-save{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.95);border-top:1px solid #cbd5e1;padding:10px 12px calc(10px + env(safe-area-inset-bottom));backdrop-filter:blur(8px)}
+.sticky-save .inner{max-width:760px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.photo-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.photo-action-label{display:block;text-align:center;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:11px;padding:11px 8px;font-size:13px;font-weight:900;cursor:pointer}
+.photo-action-label input{display:none}
+.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.photo-item{border:1px solid #e2e8f0;border-radius:12px;padding:8px;background:#f8fafc}
+.photo-item img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block;background:#e2e8f0}
+.photo-item input{font-size:13px;margin-top:7px;padding:8px}
+.photo-item button{width:100%;margin-top:6px;border:0;border-radius:8px;padding:8px;background:#fee2e2;color:#991b1b;font-weight:800}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}.full{grid-column:auto}}
+@media(max-width:440px){.photo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>個別作業日報</h1>
+  <p>1人につき1日1枚・スマホ入力用</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>本人・日付</h2>
+    <div class="grid2">
+      <div class="full">
+        <label>作業員名</label>
+        <input id="worker" type="text" placeholder="例：山田 太郎">
+      </div>
+      <div>
+        <label>日付</label>
+        <input id="date" type="date">
+      </div>
+      <div>
+        <label>天候</label>
+        <select id="weather">
+          <option>晴れ</option><option>曇り</option><option>雨</option><option>雪</option><option>強風</option><option>その他</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>現場・勤務時間</h2>
+    <div class="grid2">
+      <div class="full">
+        <label>現場名</label>
+        <input id="site" type="text" placeholder="例：〇〇マンション外壁改修工事">
+      </div>
+      <div><label>出勤</label><input id="start" type="time"></div>
+      <div><label>退勤</label><input id="end" type="time"></div>
+      <div><label>休憩（分）</label><input id="breakMin" type="number" min="0" step="15" placeholder="例：60"></div>
+      <div><label>実働時間</label><input id="workHours" readonly placeholder="自動計算"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>工種</h2>
+    <div id="tradeChips" class="chips"></div>
+  </section>
+
+  <section class="card">
+    <h2>本日の作業</h2>
+    <p id="taskHint" class="muted">工種を選ぶと、その工種の作業候補が表示されます。</p>
+    <div id="taskButtons" class="quick"></div>
+    <div style="margin-top:10px">
+      <label>作業内容（手入力・追記できます）</label>
+      <textarea id="work" placeholder="候補に無い作業はここへ手入力。候補を押した後の追記・修正もできます。"></textarea>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>数量・進捗</h2>
+    <div class="grid2">
+      <div><label>施工数量</label><input id="quantity" type="number" step="0.1" placeholder="例：25.4"></div>
+      <div>
+        <label>単位</label>
+        <select id="unit"><option>㎡</option><option>m</option><option>ヶ所</option><option>穴</option><option>本</option><option>式</option></select>
+      </div>
+      <div class="full"><label>自分の進捗・達成状況</label><textarea id="progress" placeholder="例：南面3〜5階の打診完了、注入は約70%"></textarea></div>
+      <div class="full"><label>使用材料</label><textarea id="materials" placeholder="例：エポキシ樹脂 1.5kg、ステンレスピン 60本"></textarea></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>安全・報告</h2>
+    <div class="grid2">
+      <div class="full"><label>KY・安全確認</label><textarea id="safety" placeholder="例：支点確認、落下物養生、第三者立入区画確認"></textarea></div>
+      <div class="full"><label>申し送り・共有事項</label><textarea id="notes" placeholder="例：明日確認が必要な箇所あり／材料残量注意"></textarea></div>
+      <div class="full"><label>本日の反省点・改善点</label><textarea id="reflection" placeholder="例：材料準備に時間が掛かった。明日は施工前に数量を確認して準備する"></textarea></div>
+      <div class="full"><label>明日の予定</label><textarea id="nextplan" placeholder="例：東面の調査、南面注入の続き"></textarea></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>作業写真</h2>
+    <div class="photo-actions">
+      <label class="photo-action-label">📷 写真を撮る
+        <input id="cameraInput" type="file" accept="image/*" capture="environment">
+      </label>
+      <label class="photo-action-label">🖼️ 端末から選ぶ
+        <input id="galleryInput" type="file" accept="image/*" multiple>
+      </label>
+    </div>
+    <div id="photoGrid" class="photo-grid"></div>
+    <p class="muted">最大6枚。写真は自動圧縮して日報に保存します。</p>
+  </section>
+
+  <section class="card">
+    <h2>日報プレビュー</h2>
+    <div class="actions">
+      <button class="btn btn-light" onclick="updatePreview()">更新</button>
+      <button class="btn btn-dark" onclick="copyReport()">コピー</button>
+      <button class="btn btn-primary" style="grid-column:1/-1" onclick="exportPDF()">PDF出力</button>
+    </div>
+    <div id="preview" class="summary" style="margin-top:10px"></div>
+  </section>
+
+  <section class="card">
+    <h2>保存済み個人日報 <span id="countBadge" class="badge">0件</span></h2>
+    <div id="savedList"></div>
+  </section>
+</main>
+
+<div class="sticky-save">
+  <div class="inner">
+    <button class="btn btn-light" onclick="newReport()">新規</button>
+    <button class="btn btn-primary" onclick="saveReport()">個人日報を保存</button>
+  </div>
+</div>
+
+<script>
+const trades=["ロープ作業","調査","注入","防水","シーリング","外壁補修","塗装","洗浄","その他"];
+
+const tradeTasks={
+  "ロープ作業":["ロープ設置","支点確認","ロープアクセス作業","ロープ撤去"],
+  "調査":["打診調査","目視調査","漏水調査","雨漏り調査","マーキング","写真記録"],
+  "注入":["穿孔","孔内清掃","エポキシ樹脂注入","ピンニング","注入口処理","打診確認"],
+  "防水":["下地処理","プライマー塗布","メッシュ貼り","防水材塗布","トップコート","改修ドレン取付"],
+  "シーリング":["既存シール撤去","清掃","プライマー塗布","バックアップ材設置","シーリング充填","ヘラ押さえ"],
+  "外壁補修":["浮き補修","欠損補修","ひび割れ補修","モルタル補修","タイル補修","肌合わせ"],
+  "塗装":["ケレン","養生","下塗り","中塗り","上塗り","タッチアップ"],
+  "洗浄":["高圧洗浄","薬品洗浄","水洗い","清掃"],
+  "その他":["資材搬入","養生","清掃","片付け","写真撮影"]
+};
+
+let editingId=null;
+let selectedTrades=[];
+let attachedPhotos=[];
+
+const $=id=>document.getElementById(id);
+const getReports=()=>JSON.parse(localStorage.getItem("kojin_reports_v3")||"[]");
+const saveReports=a=>localStorage.setItem("kojin_reports_v3",JSON.stringify(a));
+
+function init(){
+  $("date").value=new Date().toISOString().slice(0,10);
+  renderTrades();
+  renderTaskButtons();
+  renderPhotos();
+  renderSaved();
+  $("cameraInput").addEventListener("change",e=>{addPhotoFiles(e.target.files);e.target.value="";});
+  $("galleryInput").addEventListener("change",e=>{addPhotoFiles(e.target.files);e.target.value="";});
+  calcHours();
+  updatePreview();
+}
+
+function renderTrades(){
+  $("tradeChips").innerHTML=trades.map(t=>`<button class="chip" data-name="${escapeAttr(t)}" onclick="toggleTrade(this)">${escapeHtml(t)}</button>`).join("");
+}
+
+function toggleTrade(el){
+  const name=el.dataset.name;
+  el.classList.toggle("active");
+  if(el.classList.contains("active")) selectedTrades.push(name);
+  else selectedTrades=selectedTrades.filter(x=>x!==name);
+  renderTaskButtons();
+  updatePreview();
+}
+
+function renderTaskButtons(){
+  const box=$("taskButtons");
+  const hint=$("taskHint");
+  if(!selectedTrades.length){
+    box.innerHTML="";
+    hint.textContent="工種を選ぶと、その工種の作業候補が表示されます。";
+    return;
+  }
+  const tasks=[];
+  selectedTrades.forEach(trade=>{
+    (tradeTasks[trade]||[]).forEach(task=>{
+      if(!tasks.includes(task)) tasks.push(task);
+    });
+  });
+  hint.textContent="選択中："+selectedTrades.join("・")+"。候補に無い内容は下へ手入力できます。";
+  box.innerHTML=tasks.map(task=>`<button type="button" onclick='appendWork(${JSON.stringify(task)})'>${escapeHtml(task)}</button>`).join("");
+}
+
+function appendWork(t){
+  const cur=$("work").value.trim();
+  $("work").value=cur ? cur+"、"+t : t;
+  $("work").focus();
+  updatePreview();
+}
+
+function calcHours(){
+  const s=$("start").value,e=$("end").value,br=parseFloat($("breakMin").value)||0;
+  if(!s||!e){$("workHours").value="";return}
+  const [sh,sm]=s.split(":").map(Number),[eh,em]=e.split(":").map(Number);
+  let mins=(eh*60+em)-(sh*60+sm);
+  if(mins<0) mins+=1440;
+  mins=Math.max(0,mins-br);
+  $("workHours").value=(mins/60).toFixed(mins%60?2:1)+"時間";
+}
+
+function data(){
+  return {
+    id:editingId||Date.now(),
+    worker:$("worker").value.trim(),
+    date:$("date").value,
+    weather:$("weather").value,
+    site:$("site").value.trim(),
+    start:$("start").value,
+    end:$("end").value,
+    breakMin:$("breakMin").value,
+    workHours:$("workHours").value,
+    trades:[...selectedTrades],
+    work:$("work").value.trim(),
+    quantity:$("quantity").value,
+    unit:$("unit").value,
+    progress:$("progress").value.trim(),
+    materials:$("materials").value.trim(),
+    safety:$("safety").value.trim(),
+    notes:$("notes").value.trim(),
+    reflection:$("reflection").value.trim(),
+    nextplan:$("nextplan").value.trim(),
+    photos:attachedPhotos.map(p=>({src:p.src,caption:p.caption||""})),
+    updatedAt:new Date().toISOString()
+  };
+}
+
+function reportText(d=data()){
+return `【個別作業日報】
+作業員：${d.worker||"-"}
+日付：${d.date||"-"}
+現場：${d.site||"-"}
+天候：${d.weather||"-"}
+
+■ 勤務時間
+出勤：${d.start||"-"}
+退勤：${d.end||"-"}
+休憩：${d.breakMin?d.breakMin+"分":"-"}
+実働：${d.workHours||"-"}
+
+■ 工種
+${d.trades.length?d.trades.join("、"):"-"}
+
+■ 本日の作業内容
+${d.work||"-"}
+
+■ 施工数量
+${d.quantity?d.quantity+" "+d.unit:"-"}
+
+■ 進捗・達成状況
+${d.progress||"-"}
+
+■ 使用材料
+${d.materials||"-"}
+
+■ KY・安全確認
+${d.safety||"-"}
+
+■ 申し送り・共有事項
+${d.notes||"-"}
+
+■ 本日の反省点・改善点
+${d.reflection||"-"}
+
+■ 明日の予定
+${d.nextplan||"-"}
+
+■ 作業写真
+${d.photos.length?d.photos.length+"枚添付":"-"}`;
+}
+
+function updatePreview(){
+  calcHours();
+  $("preview").textContent=reportText();
+}
+
+async function copyReport(){
+  const t=reportText();
+  try{
+    await navigator.clipboard.writeText(t);
+    alert("個別作業日報をコピーしました。");
+  }catch(e){
+    prompt("コピーしてください",t);
+  }
+}
+
+function fileToCompressedDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxSide=1280;
+        const scale=Math.min(1,maxSide/Math.max(img.width,img.height));
+        const canvas=document.createElement("canvas");
+        canvas.width=Math.round(img.width*scale);
+        canvas.height=Math.round(img.height*scale);
+        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL("image/jpeg",0.76));
+      };
+      img.onerror=reject;
+      img.src=reader.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function addPhotoFiles(files){
+  const remaining=6-attachedPhotos.length;
+  if(remaining<=0){alert("写真は最大6枚までです。");return}
+  const list=Array.from(files).slice(0,remaining);
+  for(const file of list){
+    if(!file.type.startsWith("image/")) continue;
+    try{
+      const src=await fileToCompressedDataUrl(file);
+      attachedPhotos.push({src,caption:""});
+    }catch(e){
+      alert("写真の読み込みに失敗しました。");
+    }
+  }
+  renderPhotos();
+  updatePreview();
+}
+
+function renderPhotos(){
+  const box=$("photoGrid");
+  if(!attachedPhotos.length){
+    box.innerHTML='<div class="muted" style="grid-column:1/-1">まだ写真は添付されていません。</div>';
+    return;
+  }
+  box.innerHTML=attachedPhotos.map((p,i)=>`
+    <div class="photo-item">
+      <img src="${p.src}" alt="作業写真${i+1}">
+      <input value="${escapeAttr(p.caption||"")}" placeholder="写真${i+1}の説明" oninput="updatePhotoCaption(${i},this.value)">
+      <button type="button" onclick="removePhoto(${i})">この写真を削除</button>
+    </div>`).join("");
+}
+
+function updatePhotoCaption(i,v){
+  if(attachedPhotos[i]) attachedPhotos[i].caption=v;
+}
+function removePhoto(i){
+  attachedPhotos.splice(i,1);
+  renderPhotos();
+  updatePreview();
+}
+
+function saveReport(){
+  const d=data();
+  if(!d.worker||!d.date||!d.site){
+    alert("作業員名・日付・現場名は必須です。");
+    return;
+  }
+  let arr=getReports();
+  const idx=arr.findIndex(x=>x.id===d.id);
+  if(idx>=0) arr[idx]=d; else arr.unshift(d);
+  try{
+    saveReports(arr);
+  }catch(e){
+    alert("保存容量が不足しました。写真枚数を減らすか、不要な日報を削除してください。");
+    return;
+  }
+  editingId=d.id;
+  renderSaved();
+  updatePreview();
+  alert("個別作業日報を保存しました。");
+}
+
+function newReport(){
+  editingId=null;
+  selectedTrades=[];
+  attachedPhotos=[];
+  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+  ["worker","site","start","end","breakMin","workHours","work","quantity","progress","materials","safety","notes","reflection","nextplan"].forEach(id=>$(id).value="");
+  $("date").value=new Date().toISOString().slice(0,10);
+  $("weather").value="晴れ";
+  $("unit").value="㎡";
+  renderTaskButtons();
+  renderPhotos();
+  updatePreview();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function editReport(id){
+  const d=getReports().find(x=>x.id===id);
+  if(!d)return;
+  editingId=id;
+  $("worker").value=d.worker||"";
+  $("date").value=d.date||"";
+  $("weather").value=d.weather||"晴れ";
+  $("site").value=d.site||"";
+  $("start").value=d.start||"";
+  $("end").value=d.end||"";
+  $("breakMin").value=d.breakMin||"";
+  $("work").value=d.work||"";
+  $("quantity").value=d.quantity||"";
+  $("unit").value=d.unit||"㎡";
+  $("progress").value=d.progress||"";
+  $("materials").value=d.materials||"";
+  $("safety").value=d.safety||"";
+  $("notes").value=d.notes||"";
+  $("reflection").value=d.reflection||"";
+  $("nextplan").value=d.nextplan||"";
+  attachedPhotos=Array.isArray(d.photos)?d.photos:[];
+  selectedTrades=[];
+  document.querySelectorAll(".chip").forEach(el=>{
+    const on=(d.trades||[]).includes(el.dataset.name);
+    el.classList.toggle("active",on);
+    if(on) selectedTrades.push(el.dataset.name);
+  });
+  renderTaskButtons();
+  renderPhotos();
+  calcHours();
+  updatePreview();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function deleteReport(id){
+  if(!confirm("この個別作業日報を削除しますか？"))return;
+  saveReports(getReports().filter(x=>x.id!==id));
+  if(editingId===id)newReport();
+  renderSaved();
+}
+
+function renderSaved(){
+  const arr=getReports();
+  $("countBadge").textContent=arr.length+"件";
+  if(!arr.length){
+    $("savedList").innerHTML='<p class="muted">まだ保存された個人日報はありません。</p>';
+    return;
+  }
+  $("savedList").innerHTML=arr.map(d=>`
+    <div class="saved">
+      <div class="title">${escapeHtml(d.worker||"作業員未入力")} ｜ ${escapeHtml(d.site||"現場名なし")}</div>
+      <div class="meta">${escapeHtml(d.date||"-")} ・ ${escapeHtml(d.workHours||"実働未計算")} ・ 写真 ${(d.photos||[]).length}枚</div>
+      <div class="tags">${escapeHtml((d.trades||[]).join(" / ")||"工種未選択")}${d.quantity?" ・ "+escapeHtml(d.quantity+" "+d.unit):""}</div>
+      <div class="buttons">
+        <button class="btn btn-light" onclick="editReport(${d.id})">開く</button>
+        <button class="btn btn-danger" onclick="deleteReport(${d.id})">削除</button>
+      </div>
+    </div>`).join("");
+}
+
+function exportPDF(){
+  const d=data();
+  if(!d.worker||!d.date||!d.site){
+    alert("PDF出力には、作業員名・日付・現場名を入力してください。");
+    return;
+  }
+  const photos=(d.photos||[]).length
+    ? `<div class="photos">${d.photos.map((p,i)=>`
+      <figure>
+        <img src="${p.src}">
+        <figcaption>写真${i+1}${p.caption?"："+escapeHtml(p.caption):""}</figcaption>
+      </figure>`).join("")}</div>`
+    : `<div>-</div>`;
+
+  const win=window.open("","_blank");
+  if(!win){
+    alert("PDF画面を開けませんでした。ブラウザのポップアップを許可してください。");
+    return;
+  }
+  const section=(title,body)=>`<section><h2>${title}</h2><div class="body">${body||"-"}</div></section>`;
+  const nl=s=>escapeHtml(s||"-").replace(/\n/g,"<br>");
+
+  win.document.write(`<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>${escapeHtml(d.date)}_${escapeHtml(d.worker)}_個別作業日報</title>
+<style>
+@page{size:A4;margin:12mm}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;color:#111;margin:0;font-size:10.5pt}
+h1{text-align:center;font-size:18pt;margin:0 0 7mm}
+.meta{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #333;border-left:1px solid #333;margin-bottom:5mm}
+.meta div{border-right:1px solid #333;border-bottom:1px solid #333;padding:6px}
+section{margin-bottom:4mm;break-inside:avoid}
+section h2{font-size:10.5pt;margin:0;background:#eee;border:1px solid #666;padding:5px}
+section .body{border:1px solid #666;border-top:0;padding:7px;min-height:8mm;line-height:1.5}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+figure{margin:0;border:1px solid #aaa;padding:3mm;break-inside:avoid}
+figure img{width:100%;max-height:82mm;object-fit:contain;display:block}
+figcaption{text-align:center;font-size:9pt;margin-top:2mm}
+.footer{text-align:right;font-size:8pt;color:#666;margin-top:4mm}
+</style></head><body>
+<h1>個別作業日報</h1>
+<div class="meta">
+<div><b>作業員</b>　${escapeHtml(d.worker)}</div>
+<div><b>日付</b>　${escapeHtml(d.date)}</div>
+<div><b>現場</b>　${escapeHtml(d.site)}</div>
+<div><b>天候</b>　${escapeHtml(d.weather)}</div>
+<div><b>勤務</b>　${escapeHtml(d.start||"-")} ～ ${escapeHtml(d.end||"-")}</div>
+<div><b>休憩 / 実働</b>　${escapeHtml(d.breakMin?d.breakMin+"分":"-")} / ${escapeHtml(d.workHours||"-")}</div>
+</div>
+${section("工種",nl((d.trades||[]).join("、")))}
+${section("本日の作業内容",nl(d.work))}
+${section("施工数量",d.quantity?escapeHtml(d.quantity+" "+d.unit):"-")}
+${section("進捗・達成状況",nl(d.progress))}
+${section("使用材料",nl(d.materials))}
+${section("KY・安全確認",nl(d.safety))}
+${section("申し送り・共有事項",nl(d.notes))}
+${section("本日の反省点・改善点",nl(d.reflection))}
+${section("明日の予定",nl(d.nextplan))}
+${section("作業写真",photos)}
+<div class="footer">個別作業日報アプリ</div>
+<script>window.onload=()=>setTimeout(()=>window.print(),500);<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+function escapeHtml(s){
+  return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function escapeAttr(s){return escapeHtml(s).replace(/"/g,"&quot;")}
+
+document.addEventListener("input",e=>{
+  if(["INPUT","TEXTAREA","SELECT"].includes(e.target.tagName)) updatePreview();
+});
+
+init();
+</script>
+</body>
+</html>
