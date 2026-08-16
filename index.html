@@ -236,7 +236,6 @@ function renderTaskButtons(){
 function appendWork(t){
   const cur=$("work").value.trim();
   $("work").value=cur ? cur+"、"+t : t;
-  $("work").focus();
   updatePreview();
 }
 
