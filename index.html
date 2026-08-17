@@ -141,11 +141,12 @@ textarea{min-height:88px;resize:vertical}
       </label>
     </div>
     <div id="photoGrid" class="photo-grid"></div>
-    <p class="muted">最大6枚。写真は自動圧縮して日報に保存します。</p>
+    <p class="muted">最大6枚。日報・PDF用に自動で軽量化して保存します。写真原本は従来のアルバムへ保存してください。</p>
   </section>
 
   <section class="card">
     <h2>日報プレビュー</h2>
+    <div id="browserNotice" style="display:none;margin-bottom:10px;padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fdba74;color:#9a3412;font-size:12px;line-height:1.6;font-weight:700"></div>
     <div class="actions">
       <button class="btn btn-light" onclick="updatePreview()">更新</button>
       <button class="btn btn-dark" onclick="copyReport()">コピー</button>
@@ -196,10 +197,37 @@ function init(){
   renderTaskButtons();
   renderPhotos();
   renderSaved();
+  checkBrowser();
   $("cameraInput").addEventListener("change",e=>{addPhotoFiles(e.target.files);e.target.value="";});
   $("galleryInput").addEventListener("change",e=>{addPhotoFiles(e.target.files);e.target.value="";});
   calcHours();
   updatePreview();
+}
+
+
+function checkBrowser(){
+  const ua=navigator.userAgent||"";
+  const notice=$("browserNotice");
+  const isLine=/Line\//i.test(ua);
+  const isInstagram=/Instagram/i.test(ua);
+  const isFacebook=/FBAN|FBAV/i.test(ua);
+  const isAndroid=/Android/i.test(ua);
+  const isIOS=/iPhone|iPad|iPod/i.test(ua);
+  const isChrome=/Chrome|CriOS/i.test(ua) && !/Edg|OPR/i.test(ua);
+  const isSafari=/Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR/i.test(ua);
+
+  if(isLine || isInstagram || isFacebook){
+    notice.style.display="block";
+    notice.innerHTML="⚠️ このアプリ内ブラウザではPDF出力が正常に動かない場合があります。<br>AndroidはChrome、iPhoneはSafariでこのページを開いてからPDF出力してください。";
+  }else if(isAndroid && !isChrome){
+    notice.style.display="block";
+    notice.innerHTML="📄 PDF出力はAndroid版Chromeでの利用を推奨します。現在のブラウザでうまく出力できない場合はChromeで開いてください。";
+  }else if(isIOS && !isSafari && !isChrome){
+    notice.style.display="block";
+    notice.innerHTML="📄 iPhoneではSafariでのPDF出力を推奨します。";
+  }else{
+    notice.style.display="none";
+  }
 }
 
 function renderTrades(){
@@ -340,13 +368,13 @@ function fileToCompressedDataUrl(file){
     reader.onload=()=>{
       const img=new Image();
       img.onload=()=>{
-        const maxSide=1280;
+        const maxSide=900;
         const scale=Math.min(1,maxSide/Math.max(img.width,img.height));
         const canvas=document.createElement("canvas");
         canvas.width=Math.round(img.width*scale);
         canvas.height=Math.round(img.height*scale);
         canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-        resolve(canvas.toDataURL("image/jpeg",0.76));
+        resolve(canvas.toDataURL("image/jpeg",0.55));
       };
       img.onerror=reject;
       img.src=reader.result;
@@ -493,6 +521,11 @@ function renderSaved(){
 }
 
 function exportPDF(){
+  const ua=navigator.userAgent||"";
+  if(/Line\//i.test(ua) || /Instagram/i.test(ua) || /FBAN|FBAV/i.test(ua)){
+    alert("このアプリ内ブラウザではPDF出力が正常に動かない場合があります。\n\nAndroid：Chrome\niPhone：Safari\n\nでこの日報アプリを開いてからPDF出力してください。");
+    return;
+  }
   const d=data();
   if(!d.worker||!d.date||!d.site){
     alert("PDF出力には、作業員名・日付・現場名を入力してください。");
@@ -519,13 +552,16 @@ function exportPDF(){
 <title>${escapeHtml(d.date)}_${escapeHtml(d.worker)}_個別作業日報</title>
 <style>
 @page{size:A4;margin:12mm}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;color:#111;margin:0;font-size:10.5pt}
-h1{text-align:center;font-size:18pt;margin:0 0 7mm}
-.meta{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #333;border-left:1px solid #333;margin-bottom:5mm}
-.meta div{border-right:1px solid #333;border-bottom:1px solid #333;padding:6px}
-section{margin-bottom:4mm;break-inside:avoid}
-section h2{font-size:10.5pt;margin:0;background:#eee;border:1px solid #666;padding:5px}
-section .body{border:1px solid #666;border-top:0;padding:7px;min-height:8mm;line-height:1.5}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;color:#111;margin:0;font-size:9.5pt}
+h1{text-align:center;font-size:17pt;margin:0 0 5mm}
+.meta{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #333;border-left:1px solid #333;margin-bottom:3.5mm}
+.meta div{border-right:1px solid #333;border-bottom:1px solid #333;padding:4px 6px}
+section{margin-bottom:2.6mm;break-inside:avoid}
+section h2{font-size:9.5pt;margin:0;background:#eee;border:1px solid #666;padding:3.5px 5px}
+section .body{border:1px solid #666;border-top:0;padding:5px 7px;min-height:5.5mm;line-height:1.35}
+.photo-page{break-before:page;page-break-before:always;margin-top:0}
+.photo-page h2{font-size:12pt;padding:5px}
+.photo-page .body{padding:4mm}
 .photos{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
 figure{margin:0;border:1px solid #aaa;padding:3mm;break-inside:avoid}
 figure img{width:100%;max-height:82mm;object-fit:contain;display:block}
@@ -550,9 +586,16 @@ ${section("KY・安全確認",nl(d.safety))}
 ${section("申し送り・共有事項",nl(d.notes))}
 ${section("本日の反省点・改善点",nl(d.reflection))}
 ${section("明日の予定",nl(d.nextplan))}
-${section("作業写真",photos)}
+${`<section class="photo-page"><h2>作業写真</h2><div class="body">${photos}</div></section>`}
 <div class="footer">個別作業日報アプリ</div>
-<script>window.onload=()=>setTimeout(()=>window.print(),500);<\/script>
+<script>
+window.onload=()=>{
+  const imgs=[...document.images];
+  if(!imgs.length){setTimeout(()=>window.print(),300);return;}
+  Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>{img.onload=r;img.onerror=r;})))
+    .then(()=>setTimeout(()=>window.print(),300));
+};
+<\/script>
 </body></html>`);
   win.document.close();
 }
